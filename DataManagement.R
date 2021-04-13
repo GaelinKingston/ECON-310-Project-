@@ -21,7 +21,7 @@ urlfile<-'https://raw.githubusercontent.com/GaelinKingston/ECON-310-Project-/mai
 mass_msw_2009<-read.csv(urlfile)
 
 #2010 survey does not include data on PAYT or SMART programs
-#mass_msw_2010 = read_csv("msw_mass_survey_2010.csv")
+mass_msw_2010 = read_csv("https://raw.githubusercontent.com/GaelinKingston/ECON-310-Project-/main/Data/msw_mass_survey_2010.csv")
 
 mass_msw_2011 = read_csv("msw_mass_survey_2011.csv")
 

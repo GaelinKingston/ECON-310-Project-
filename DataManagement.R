@@ -1,11 +1,10 @@
-<<<<<<< HEAD
 ### Patrick Wolff & Gaelin Kingston
 ### ECON310: Environmental Resource Economics Final Paper
 ### Dataset Compilation
 
 # Setting Working Directory (to be commented out)
 
-setwd("~/WESLEYAN/Spring 2021/ECON310-Environmental Resource Economics/Final Paper/Data/Raw Data from Excel")
+#setwd("~/WESLEYAN/Spring 2021/ECON310-Environmental Resource Economics/Final Paper/Data/Raw Data from Excel")
 
 # Loading Packages: readr & tidyverse
 
@@ -17,6 +16,9 @@ library(stargazer)
 
 #2009 survey does not include data on PAYT or SMART programs
 #mass_msw_2009 = read_csv("msw_mass_survey_2009.csv")
+
+urlfile<-'https://raw.githubusercontent.com/GaelinKingston/ECON-310-Project-/main/Data/msw_mass_survey_2009.csv'
+mass_msw_2009<-read.csv(urlfile)
 
 #2010 survey does not include data on PAYT or SMART programs
 #mass_msw_2010 = read_csv("msw_mass_survey_2010.csv")

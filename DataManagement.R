@@ -6,13 +6,18 @@
 
 # install.packages("readr")
 # install.packages("tidyverse")
-# install.packages("stargazer")
+#install.packages("stargazer")
 
 library(readr)
 library(tidyverse)
 library(stargazer)
+library(descr)
+library(Hmisc)
+library(ggplot2)
+library(dplyr)
+library(varhandle)
 
-# Importing Massachusetts Datasets from 2009-2019
+## Importing Massachusetts Datasets from 2009-2019
 
 #2009 survey does not include data on PAYT or SMART programs
 mass_msw_2009<-read.csv("https://raw.githubusercontent.com/GaelinKingston/ECON-310-Project-/main/Data/msw_mass_survey_2009.csv")
@@ -205,8 +210,8 @@ complete_data_2011_2019 = complete_data_2011_2019[complete_data_2011_2019$trash_
 #checking distribution of complete cases by year
 
 complete_data_2011_2019 %>% 
-  group_by(year) %>% 
-  summarize(n = n())
+  dplyr::group_by(year) %>%  #Added "dplyy::" because it would not run for me without this (Gaelin)
+  dplyr::summarize(n = n())
 
 #most observations in a year: 2018, n = 284
 #least observations in a year: 2013, n = 219
@@ -224,3 +229,33 @@ summary(complete_data_2011_2019)
 # clean table of means (at least for numerical vars)
 
 stargazer(as.data.frame(complete_data_2011_2019), type = "latex", out = "tab_of_means.txt")
+
+
+##Determining which municipalities have adopted PAYT from 2012-2019
+
+#Create subset with municipality and PAYT
+x = complete_data_2011_2019 %>%
+  select(municipality, PAYT)
+
+#Change PAYT to numeric
+x$PAYT = unfactor(x$PAYT)
+
+#Determine the mean of PAYT within each municipality. 
+x %>% 
+  group_by(municipality) %>%
+  summarise(mean_payt=mean(PAYT, na.rm = TRUE)) -> changed_payt
+
+#Remove responses where PAYT equals 0 or 1
+
+
+sum(changed_payt$mean_payt != 0 & changed_payt$mean_payt != 1)
+
+wanted_cities = x %>% 
+  x$municipality[x$mean_payt != 0 & x$mean_payt != 1]
+
+
+wanted_cities = x$municipality[x$mean_payt != 0 & x$mean_payt != 1] 
+
+x = complete_data_2011_2019[complete_data_2011_2019$municipality %in% wanted_cities, ]
+
+

@@ -219,7 +219,6 @@ complete_data_2011_2019 %>%
 # converting categorical variables to factor type for summary purposes
 
 complete_data_2011_2019$service_type = as.factor(complete_data_2011_2019$service_type)
-complete_data_2011_2019$year = as.factor(complete_data_2011_2019$year)
 complete_data_2011_2019$PAYT = as.factor(complete_data_2011_2019$PAYT)
 
 # messy output
@@ -270,8 +269,11 @@ wanted_cities = x %>%
 
 votes = read_csv("https://raw.githubusercontent.com/GaelinKingston/ECON-310-Project-/main/Data/RegisteredVoters.csv")
 
-population = read_csv("https://raw.githubusercontent.com/GaelinKingston/ECON-310-Project-/main/Data/population.csv")
+#income dataset includes population figures as well
+income = read_csv("https://raw.githubusercontent.com/GaelinKingston/ECON-310-Project-/main/Data/income.csv")
 
-income = read_csv("https://raw.githubusercontent.com/GaelinKingston/ECON-310-Project-/main/Data/DOR_Income_EQV_Per_Capita.csv")
+# joining original set with socioeconomic congrols and cleaning out identifiers
 
+data_with_controls = left_join(complete_data_2011_2019, income, by = c("municipality" = "Municipality", "year" = "Cherry Sheet FY"))
 
+data_with_controls = data_with_controls %>% select(municipality, trash_tonnage, num_households, PAYT, service_type, year, Population, `DOR Income`, `DOR Income Per Capita`, EQV, `EQV Per Capita`)

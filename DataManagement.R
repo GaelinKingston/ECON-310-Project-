@@ -277,4 +277,4 @@ income = read_csv("https://raw.githubusercontent.com/GaelinKingston/ECON-310-Pro
 
 data_with_controls = left_join(complete_data_2011_2019, income, by = c("municipality" = "Municipality", "year" = "Cherry Sheet FY"))
 
-data_with_controls = data_with_controls %>% select(municipality, trash_tonnage, num_households, PAYT, service_type, year, Population, `DOR Income`, `DOR Income Per Capita`, EQV, `EQV Per Capita`)
+data_with_controls = na.omit(data_with_controls %>% select(municipality, trash_tonnage, num_households, PAYT, service_type, year, Population, `DOR Income`, `DOR Income Per Capita`, EQV, `EQV Per Capita`))

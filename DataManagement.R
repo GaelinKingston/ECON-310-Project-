@@ -255,10 +255,23 @@ possible_municipalities<-changed_payt[!(changed_payt$mean_payt=="1"), ]
 
 #wanted_cities = changed_payt %>% 
  # changed_payt$municipality[x$mean_payt != 0 & x$mean_payt != 1]
+wanted_cities = x$municipality[changed_payt$mean_payt != 0 & changed_payt$mean_payt != 1]
+
+
+wanted_cities = x %>% 
+  x$municipality[x$mean_payt != 0 & x$mean_payt != 1] 
 
 
 #wanted_cities = x$municipality[x$mean_payt != 0 & x$mean_payt != 1] 
 
 #x = complete_data_2011_2019[complete_data_2011_2019$municipality %in% wanted_cities, ]
+
+# loading socioeconomic data from GitHub repo for joining
+
+votes = read_csv("https://raw.githubusercontent.com/GaelinKingston/ECON-310-Project-/main/Data/RegisteredVoters.csv")
+
+population = read_csv("https://raw.githubusercontent.com/GaelinKingston/ECON-310-Project-/main/Data/population.csv")
+
+income = read_csv("https://raw.githubusercontent.com/GaelinKingston/ECON-310-Project-/main/Data/DOR_Income_EQV_Per_Capita.csv")
 
 

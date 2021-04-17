@@ -250,12 +250,15 @@ x %>%
 
 sum(changed_payt$mean_payt != 0 & changed_payt$mean_payt != 1)
 
-wanted_cities = x %>% 
-  x$municipality[x$mean_payt != 0 & x$mean_payt != 1]
+possible_municipalities<-changed_payt[!(changed_payt$mean_payt=="1"), ]
 
 
-wanted_cities = x$municipality[x$mean_payt != 0 & x$mean_payt != 1] 
+#wanted_cities = changed_payt %>% 
+ # changed_payt$municipality[x$mean_payt != 0 & x$mean_payt != 1]
 
-x = complete_data_2011_2019[complete_data_2011_2019$municipality %in% wanted_cities, ]
+
+#wanted_cities = x$municipality[x$mean_payt != 0 & x$mean_payt != 1] 
+
+#x = complete_data_2011_2019[complete_data_2011_2019$municipality %in% wanted_cities, ]
 
 

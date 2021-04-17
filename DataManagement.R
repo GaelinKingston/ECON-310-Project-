@@ -267,7 +267,8 @@ wanted_cities = x %>%
 
 # loading socioeconomic data from GitHub repo for joining
 
-votes = read_csv("https://raw.githubusercontent.com/GaelinKingston/ECON-310-Project-/main/Data/RegisteredVoters.csv")
+#file has disappeared, only goes until 2012 anyways
+#votes = read_csv("https://raw.githubusercontent.com/GaelinKingston/ECON-310-Project-/main/Data/RegisteredVoters.csv")
 
 #income dataset includes population figures as well
 income = read_csv("https://raw.githubusercontent.com/GaelinKingston/ECON-310-Project-/main/Data/income.csv")

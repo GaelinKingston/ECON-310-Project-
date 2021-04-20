@@ -360,4 +360,12 @@ rm(mass_msw_2009,
 
 slr_1 = lm(trash_tonnage ~ PAYT, data = data_with_controls)
 
-summary(slr_1) #kinda sick
+summary(slr_1)
+
+mlr_1 = lm(trash_tonnage ~ PAYT + `DOR Income Per Capita` + Population , data = data_with_controls)
+
+summary(mlr_1)
+
+
+
+

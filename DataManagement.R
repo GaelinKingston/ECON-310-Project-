@@ -279,6 +279,9 @@ data_with_controls = left_join(complete_data_2011_2019, income, by = c("municipa
 
 data_with_controls = na.omit(data_with_controls %>% select(municipality, trash_tonnage, num_households, PAYT, service_type, year, Population, `DOR Income`, `DOR Income Per Capita`, EQV, `EQV Per Capita`))
 
+# Renaming Odd Variables (DOR)
+
+colnames(data_with_controls) = c("municipality", "trash_tonnage", "num_households", "PAYT", "service_type", "year", "population", "income", "income_pc", "EQV", "EQV_pc" )
 
 #Joining possible_municipalities with controls to determine which municipalities most closely resemble Middletown 
 
@@ -362,9 +365,16 @@ slr_1 = lm(trash_tonnage ~ PAYT, data = data_with_controls)
 
 summary(slr_1)
 
-mlr_1 = lm(trash_tonnage ~ PAYT + `DOR Income Per Capita` + Population , data = data_with_controls)
+mlr_1 = lm(trash_tonnage ~ PAYT + income_pc , data = data_with_controls)
 
 summary(mlr_1)
+
+mlr_2 = lm(trash_tonnage ~ PAYT + income_pc + population , data = data_with_controls)
+
+summary(mlr_2)
+
+stargazer(slr_1, mlr_1, mlr_2, type = "latex", out = "regression_output_first")
+
 
 
 

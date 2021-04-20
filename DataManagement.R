@@ -313,6 +313,51 @@ df10<-data_with_controls[(data_with_controls$municipality=='acton' | data_with_c
 final_data<-df10[(df10$year=='2014' | df10$year=='2015'), ]
 
 
+#   Decluttering environment after combinations (add anything to this list that was temporary in the script)
+
+rm(mass_msw_2009,
+   mass_msw_2010,
+   mass_msw_2011,
+   mass_msw_2012,
+   mass_msw_2013,
+   mass_msw_2014,
+   mass_msw_2015,
+   mass_msw_2016,
+   mass_msw_2017, 
+   mass_msw_2018, 
+   mass_msw_2019,
+   new2011,
+   new2012,
+   new2013,
+   new2014,
+   new2015,
+   new2016,
+   new2017,
+   new2018,
+   new2019,
+   simple_2011,
+   simple_2012,
+   simple_2013,
+   simple_2014,
+   simple_2015,
+   simple_2016,
+   simple_2017,
+   simple_2018,
+   simple_2019)
 
 
+# BELOW NEEDS WORK
+# saving workspace to be loaded from github link for modeling script (hopeful)
 
+# Feel free to save the below workspace in a directory of your own on your machine so that it's available
+# save.image(file = "C:/Users/patty/OneDrive/Documents/ECON-310-Project-/model_workspace.RData")
+
+
+# load("C:/Users/patty/OneDrive/Documents/ECON-310-Project-/model_workspace.RData")
+# END WORK ZONE
+
+### SLR ###
+
+slr_1 = lm(trash_tonnage ~ PAYT, data = data_with_controls)
+
+summary(slr_1) #kinda sick

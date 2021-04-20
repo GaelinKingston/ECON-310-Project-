@@ -246,7 +246,6 @@ x %>%
 
 #Remove responses where PAYT equals 0 or 1
 
-
 sum(changed_payt$mean_payt != 0 & changed_payt$mean_payt != 1)
 
 u<-changed_payt[!(changed_payt$mean_payt=="1"), ]
@@ -287,9 +286,33 @@ possible_municipalities= left_join(u, income, by = c("municipality" = "Municipal
 
 #Here I brute forced my way into the municipalities that are closest to Middletown in terms of income and population.
 # This was done by expanding cutting rows outside a range of each variable. 
-df2<-possible_municipalities[!(possible_municipalities$Population<35000 | possible_municipalities$'DOR Income Per Capita'<38000),]
 
-options<-df2[!(df2$Population>55000 | df2$'DOR Income Per Capita'>60000),]
+#Determining municipalities that switched (removing thosethat switched multiple times)
+exper <- possible_municipalities[!(possible_municipalities$mean_payt<0.0000001 | possible_municipalities$Population<20000 | possible_municipalities$'DOR Income Per Capita'<35000| possible_municipalities$municipality=='arlington'), ]
+
+#Determining Control:
+
+#Income and population
+df2<-possible_municipalities[!(possible_municipalities$Population<27000 | possible_municipalities$'DOR Income Per Capita'<36000),]
+
+options_both<-df2[!(df2$Population>70000 | df2$'DOR Income Per Capita'>70000),]
+
+#Income
+df3<-possible_municipalities[!(possible_municipalities$'DOR Income Per Capita'<40000),]
+
+options_income<-df3[!(df3$'DOR Income Per Capita'>55000),]
+
+#Population
+df4<-possible_municipalities[!(possible_municipalities$Population<27000 | possible_municipalities$'DOR Income Per Capita'<42000),]
+
+options_population<-df2[!(df2$Population>55000 | df2$'DOR Income Per Capita'>60000),]
+
+#Acton and Canton (Run regression on these two?) These were the best I could find. 
+df10<-data_with_controls[(data_with_controls$municipality=='acton' | data_with_controls$municipality=='canton'), ]
+
+final_data<-df10[(df10$year=='2014' | df10$year=='2015'), ]
+
+
 
 
 

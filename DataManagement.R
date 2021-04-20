@@ -249,7 +249,7 @@ x %>%
 
 sum(changed_payt$mean_payt != 0 & changed_payt$mean_payt != 1)
 
-possible_municipalities<-changed_payt[!(changed_payt$mean_payt=="1"), ]
+u<-changed_payt[!(changed_payt$mean_payt=="1"), ]
 
 
 #wanted_cities = changed_payt %>% 
@@ -257,8 +257,8 @@ possible_municipalities<-changed_payt[!(changed_payt$mean_payt=="1"), ]
 wanted_cities = x$municipality[changed_payt$mean_payt != 0 & changed_payt$mean_payt != 1]
 
 
-wanted_cities = x %>% 
-  x$municipality[x$mean_payt != 0 & x$mean_payt != 1] 
+#wanted_cities = x %>% 
+#  x$municipality[x$mean_payt != 0 & x$mean_payt != 1] 
 
 
 #wanted_cities = x$municipality[x$mean_payt != 0 & x$mean_payt != 1] 
@@ -270,11 +270,26 @@ wanted_cities = x %>%
 #file has disappeared, only goes until 2012 anyways
 #votes = read_csv("https://raw.githubusercontent.com/GaelinKingston/ECON-310-Project-/main/Data/RegisteredVoters.csv")
 
-#income dataset includes population figures as well
+
+#income dataset, includes population figures as well
 income = read_csv("https://raw.githubusercontent.com/GaelinKingston/ECON-310-Project-/main/Data/income.csv")
 
-# joining original set with socioeconomic congrols and cleaning out identifiers
+# joining original set with socioeconomic controls and cleaning out identifiers
 
 data_with_controls = left_join(complete_data_2011_2019, income, by = c("municipality" = "Municipality", "year" = "Cherry Sheet FY"))
 
 data_with_controls = na.omit(data_with_controls %>% select(municipality, trash_tonnage, num_households, PAYT, service_type, year, Population, `DOR Income`, `DOR Income Per Capita`, EQV, `EQV Per Capita`))
+
+
+#Joining possible_municipalities with controls to determine which municipalities most closely resemble Middletown 
+
+possible_municipalities= left_join(u, income, by = c("municipality" = "Municipality"))
+
+#Here I brute forced my way into the municipalities that are closest to Middletown in terms of income and population.
+# This was done by expanding cutting rows outside a range of each variable. 
+df2<-possible_municipalities[!(possible_municipalities$Population<35000 | possible_municipalities$'DOR Income Per Capita'<38000),]
+
+options<-df2[!(df2$Population>55000 | df2$'DOR Income Per Capita'>60000),]
+
+
+

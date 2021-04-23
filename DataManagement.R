@@ -326,3 +326,9 @@ freq(data_with_controls$service_type) #5 municipalities have "NA" for service ty
 reg1 <- feols(trash_tonnage~PAYT + PAYT*service_type + population + income_pc | factor(municipality) + factor(year), data=data_with_controls, se = "hetero") #last element provides heteroscedisity assesment
 
 summary(reg1)
+
+# FE OLS w/ logs
+
+log_fereg1 <- feols(log(trash_tonnage)~PAYT + PAYT*service_type + log(population) + log(income_pc) | factor(municipality) + factor(year), data=data_with_controls, se = "hetero") #last element provides heteroscedisity assesment
+
+summary(log_fereg1)

@@ -1,0 +1,37 @@
+
+% Table created by stargazer v.5.2.2 by Marek Hlavac, Harvard University. E-mail: hlavac at fas.harvard.edu
+% Date and time: Thu, Apr 22, 2021 - 20:44:08
+\begin{table}[!htbp] \centering 
+  \caption{} 
+  \label{} 
+\begin{tabular}{@{\extracolsep{5pt}}lccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+ & \multicolumn{3}{c}{\textit{Dependent variable:}} \\ 
+\cline{2-4} 
+\\[-1.8ex] & \multicolumn{3}{c}{trash\_tonnage} \\ 
+\\[-1.8ex] & (1) & (2) & (3)\\ 
+\hline \\[-1.8ex] 
+ PAYT1 & $-$5,843.489$^{***}$ & $-$6,012.584$^{***}$ & $-$1,666.553$^{***}$ \\ 
+  & (539.132) & (540.552) & (141.982) \\ 
+  & & & \\ 
+ income\_pc &  & $-$0.030$^{***}$ & $-$0.007$^{***}$ \\ 
+  &  & (0.009) & (0.002) \\ 
+  & & & \\ 
+ population &  &  & 0.277$^{***}$ \\ 
+  &  &  & (0.002) \\ 
+  & & & \\ 
+ Constant & 8,344.049$^{***}$ & 9,579.531$^{***}$ & 408.766$^{***}$ \\ 
+  & (371.277) & (531.360) & (146.667) \\ 
+  & & & \\ 
+\hline \\[-1.8ex] 
+Observations & 2,330 & 2,330 & 2,330 \\ 
+R$^{2}$ & 0.048 & 0.052 & 0.937 \\ 
+Adjusted R$^{2}$ & 0.048 & 0.052 & 0.936 \\ 
+Residual Std. Error & 12,994.700 (df = 2328) & 12,968.200 (df = 2327) & 3,356.640 (df = 2326) \\ 
+F Statistic & 117.477$^{***}$ (df = 1; 2328) & 64.240$^{***}$ (df = 2; 2327) & 11,441.690$^{***}$ (df = 3; 2326) \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{3}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+\end{tabular} 
+\end{table} 

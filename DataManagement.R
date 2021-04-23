@@ -244,7 +244,26 @@ data_with_controls = na.omit(data_with_controls %>% select(municipality, trash_t
 
 colnames(data_with_controls) = c("municipality", "trash_tonnage", "num_households", "PAYT", "service_type", "year", "population", "income", "income_pc", "EQV", "EQV_pc" )
 
+#  scatterplot 
 
+scatter_set = data_with_controls %>% 
+   group_by(municipality) %>% 
+   mutate(avg_pop = mean(population), avg_tonnage = mean(trash_tonnage)) 
+   
+scatter_set %>% 
+   ggplot(aes(x = avg_pop, y = avg_tonnage)) + geom_point()
+
+#  dropping boston
+
+yankee_set = scatter_set %>% 
+   filter(municipality != "boston")
+
+yankee_set %>% 
+   ggplot(aes(x = avg_pop, y = avg_tonnage)) + geom_point()
+
+no_boston_fe = feols(trash_tonnage~PAYT + PAYT*service_type + population + income_pc | factor(municipality) + factor(year), data = yankee_set, se = "hetero")
+
+summary(no_boston_fe)
 
 #   Decluttering environment after combinations (add anything to this list that was temporary in the script)
 

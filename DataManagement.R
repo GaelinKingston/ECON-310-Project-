@@ -326,6 +326,14 @@ summary(mlr_2)
 
 stargazer(slr_1, mlr_1, mlr_2, type = "latex", out = "regression_output_first")
 
+# Diff in diff should have an xt and a Wi
+
+## Question for consultants: what would cause a municipality to switch from PAYT to not PAYT?
+## Move from slr->diff in diff->fixed effects/event history, talk about the progression towards a more unbiased model
+
+
+data_with_controls %>% 
+   ggplot(aes(x = PAYT), facet_wrap(year)) + geom_histogram()
 
 
 ### Code for fixed effect OLS regression

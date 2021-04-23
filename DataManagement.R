@@ -261,6 +261,8 @@ yankee_set = scatter_set %>%
 yankee_set %>% 
    ggplot(aes(x = avg_pop, y = avg_tonnage)) + geom_point()
 
+#  feols without boston
+
 no_boston_fe = feols(trash_tonnage~PAYT + PAYT*service_type + population + income_pc | factor(municipality) + factor(year), data = yankee_set, se = "hetero")
 
 summary(no_boston_fe)

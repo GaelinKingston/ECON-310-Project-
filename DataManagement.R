@@ -7,6 +7,7 @@
 # install.packages("readr")
 # install.packages("tidyverse")
 #install.packages("stargazer")
+#install.packages("fixest")
 
 library(readr)
 library(tidyverse)
@@ -15,7 +16,8 @@ library(descr)
 library(Hmisc)
 library(ggplot2)
 library(dplyr)
-library(varhandle)
+library(varhandle) #To change variable types https://cran.r-project.org/web/packages/varhandle/varhandle.pdf
+library(fixest) #For FE OLS
 
 ## Importing Massachusetts Datasets from 2009-2019
 
@@ -229,47 +231,6 @@ summary(complete_data_2011_2019)
 
 stargazer(as.data.frame(complete_data_2011_2019), type = "latex", out = "tab_of_means.txt")
 
-
-##Determining which municipalities have adopted PAYT from 2012-2019
-
-#Create subset with municipality and PAYT
-x = complete_data_2011_2019 %>%
-  select(municipality, PAYT)
-
-#Change PAYT to numeric
-x$PAYT = unfactor(x$PAYT)
-
-#Determine the mean of PAYT within each municipality. 
-x %>% 
-  group_by(municipality) %>%
-  summarise(mean_payt=mean(PAYT, na.rm = TRUE)) -> changed_payt
-
-#Remove responses where PAYT equals 0 or 1
-
-sum(changed_payt$mean_payt != 0 & changed_payt$mean_payt != 1)
-
-u<-changed_payt[!(changed_payt$mean_payt=="1"), ]
-
-
-#wanted_cities = changed_payt %>% 
- # changed_payt$municipality[x$mean_payt != 0 & x$mean_payt != 1]
-wanted_cities = x$municipality[changed_payt$mean_payt != 0 & changed_payt$mean_payt != 1]
-
-
-#wanted_cities = x %>% 
-#  x$municipality[x$mean_payt != 0 & x$mean_payt != 1] 
-
-
-#wanted_cities = x$municipality[x$mean_payt != 0 & x$mean_payt != 1] 
-
-#x = complete_data_2011_2019[complete_data_2011_2019$municipality %in% wanted_cities, ]
-
-# loading socioeconomic data from GitHub repo for joining
-
-#file has disappeared, only goes until 2012 anyways
-#votes = read_csv("https://raw.githubusercontent.com/GaelinKingston/ECON-310-Project-/main/Data/RegisteredVoters.csv")
-
-
 #income dataset, includes population figures as well
 income = read_csv("https://raw.githubusercontent.com/GaelinKingston/ECON-310-Project-/main/Data/income.csv")
 
@@ -278,40 +239,6 @@ income = read_csv("https://raw.githubusercontent.com/GaelinKingston/ECON-310-Pro
 data_with_controls = left_join(complete_data_2011_2019, income, by = c("municipality" = "Municipality", "year" = "Cherry Sheet FY"))
 
 data_with_controls = na.omit(data_with_controls %>% select(municipality, trash_tonnage, num_households, PAYT, service_type, year, Population, `DOR Income`, `DOR Income Per Capita`, EQV, `EQV Per Capita`))
-
-
-#Joining possible_municipalities with controls to determine which municipalities most closely resemble Middletown 
-
-possible_municipalities= left_join(u, income, by = c("municipality" = "Municipality"))
-
-#Here I brute forced my way into the municipalities that are closest to Middletown in terms of income and population.
-# This was done by expanding cutting rows outside a range of each variable. 
-
-#Determining municipalities that switched (removing thosethat switched multiple times)
-exper <- possible_municipalities[!(possible_municipalities$mean_payt<0.0000001 | possible_municipalities$Population<20000 | possible_municipalities$'DOR Income Per Capita'<35000| possible_municipalities$municipality=='arlington'), ]
-
-#Determining Control:
-
-#Income and population
-df2<-possible_municipalities[!(possible_municipalities$Population<27000 | possible_municipalities$'DOR Income Per Capita'<36000),]
-
-options_both<-df2[!(df2$Population>70000 | df2$'DOR Income Per Capita'>70000),]
-
-#Income
-df3<-possible_municipalities[!(possible_municipalities$'DOR Income Per Capita'<40000),]
-
-options_income<-df3[!(df3$'DOR Income Per Capita'>55000),]
-
-#Population
-df4<-possible_municipalities[!(possible_municipalities$Population<27000 | possible_municipalities$'DOR Income Per Capita'<42000),]
-
-options_population<-df2[!(df2$Population>55000 | df2$'DOR Income Per Capita'>60000),]
-
-#Acton and Canton (Run regression on these two?) These were the best I could find. 
-df10<-data_with_controls[(data_with_controls$municipality=='acton' | data_with_controls$municipality=='canton'), ]
-
-final_data<-df10[(df10$year=='2014' | df10$year=='2015'), ]
-
 
 #   Decluttering environment after combinations (add anything to this list that was temporary in the script)
 
@@ -367,5 +294,25 @@ mlr_1 = lm(trash_tonnage ~ PAYT + `DOR Income Per Capita` + Population , data = 
 summary(mlr_1)
 
 
+### Code for fixed effect OLS regression
 
 
+#Change service_type from a factor to a character
+data_with_controls$service_type <- as.character(data_with_controls$service_type)
+
+#Changing "service_type"response values to 1 if "curbside" and 0 if "both" or "dropoff"
+data_with_controls$service_type[data_with_controls$service_type == "Drop-off"] <- 0
+data_with_controls$service_type[data_with_controls$service_type == "Curbside" | data_with_controls$service_type == "Both"] <- 1
+
+#Change service_type to numeric from character
+data_with_controls$service_type <- as.numeric(data_with_controls$service_type)
+
+freq(data_with_controls$service_type) #5 municipalities have "NA" for service type. Should I remove these? 
+
+#Change 'DOR Income Per Capita' to 'income_pc' (I was getting an error in the below regression when I did not have this changed.)
+colnames(data_with_controls)[colnames(data_with_controls) == "DOR Income Per Capita"] <- "income_pc"
+
+#FE OLS Regression code
+reg1 <- feols(trash_tonnage~PAYT + PAYT*service_type + Population + income_pc | factor(municipality) + factor(year), data=data_with_controls, se = "hetero") #last element provides heteroscedisity assesment
+
+summary(reg1)

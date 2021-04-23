@@ -240,46 +240,12 @@ data_with_controls = left_join(complete_data_2011_2019, income, by = c("municipa
 
 data_with_controls = na.omit(data_with_controls %>% select(municipality, trash_tonnage, num_households, PAYT, service_type, year, Population, `DOR Income`, `DOR Income Per Capita`, EQV, `EQV Per Capita`))
 
-<<<<<<< HEAD
-=======
 # Renaming Odd Variables (DOR)
 
 colnames(data_with_controls) = c("municipality", "trash_tonnage", "num_households", "PAYT", "service_type", "year", "population", "income", "income_pc", "EQV", "EQV_pc" )
 
-#Joining possible_municipalities with controls to determine which municipalities most closely resemble Middletown 
-
-possible_municipalities= left_join(u, income, by = c("municipality" = "Municipality"))
-
-#Here I brute forced my way into the municipalities that are closest to Middletown in terms of income and population.
-# This was done by expanding cutting rows outside a range of each variable. 
-
-#Determining municipalities that switched (removing thosethat switched multiple times)
-exper <- possible_municipalities[!(possible_municipalities$mean_payt<0.0000001 | possible_municipalities$Population<20000 | possible_municipalities$'DOR Income Per Capita'<35000| possible_municipalities$municipality=='arlington'), ]
-
-#Determining Control:
-
-#Income and population
-df2<-possible_municipalities[!(possible_municipalities$Population<27000 | possible_municipalities$'DOR Income Per Capita'<36000),]
-
-options_both<-df2[!(df2$Population>70000 | df2$'DOR Income Per Capita'>70000),]
-
-#Income
-df3<-possible_municipalities[!(possible_municipalities$'DOR Income Per Capita'<40000),]
-
-options_income<-df3[!(df3$'DOR Income Per Capita'>55000),]
-
-#Population
-df4<-possible_municipalities[!(possible_municipalities$Population<27000 | possible_municipalities$'DOR Income Per Capita'<42000),]
-
-options_population<-df2[!(df2$Population>55000 | df2$'DOR Income Per Capita'>60000),]
-
-#Acton and Canton (Run regression on these two?) These were the best I could find. 
-df10<-data_with_controls[(data_with_controls$municipality=='acton' | data_with_controls$municipality=='canton'), ]
-
-final_data<-df10[(df10$year=='2014' | df10$year=='2015'), ]
 
 
->>>>>>> 7206aea902db8341d682095cfcb239ced2d91a13
 #   Decluttering environment after combinations (add anything to this list that was temporary in the script)
 
 rm(mass_msw_2009,
@@ -347,7 +313,7 @@ stargazer(slr_1, mlr_1, mlr_2, type = "latex", out = "regression_output_first")
 #Change service_type from a factor to a character
 data_with_controls$service_type <- as.character(data_with_controls$service_type)
 
-#Changing "service_type"response values to 1 if "curbside" and 0 if "both" or "dropoff"
+#Changing "service_type"response values to 1 if "curbside" or "Both" and 0 if "dropoff"
 data_with_controls$service_type[data_with_controls$service_type == "Drop-off"] <- 0
 data_with_controls$service_type[data_with_controls$service_type == "Curbside" | data_with_controls$service_type == "Both"] <- 1
 
@@ -356,10 +322,7 @@ data_with_controls$service_type <- as.numeric(data_with_controls$service_type)
 
 freq(data_with_controls$service_type) #5 municipalities have "NA" for service type. Should I remove these? 
 
-#Change 'DOR Income Per Capita' to 'income_pc' (I was getting an error in the below regression when I did not have this changed.)
-colnames(data_with_controls)[colnames(data_with_controls) == "DOR Income Per Capita"] <- "income_pc"
-
 #FE OLS Regression code
-reg1 <- feols(trash_tonnage~PAYT + PAYT*service_type + Population + income_pc | factor(municipality) + factor(year), data=data_with_controls, se = "hetero") #last element provides heteroscedisity assesment
+reg1 <- feols(trash_tonnage~PAYT + PAYT*service_type + population + income_pc | factor(municipality) + factor(year), data=data_with_controls, se = "hetero") #last element provides heteroscedisity assesment
 
 summary(reg1)

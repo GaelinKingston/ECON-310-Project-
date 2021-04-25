@@ -332,8 +332,9 @@ stargazer(slr_1, mlr_1, mlr_2, type = "latex", out = "regression_output_first")
 ## Move from slr->diff in diff->fixed effects/event history, talk about the progression towards a more unbiased model
 
 
+
 data_with_controls %>% 
-   ggplot(aes(x = PAYT), facet_wrap(year)) + geom_histogram()
+   ggplot(aes(x = PAYT)) + geom_histogram(stat = "count") + facet_wrap(data_with_controls$year)
 
 
 ### Code for fixed effect OLS regression

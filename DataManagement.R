@@ -306,13 +306,13 @@ rm(mass_msw_2009,
 
 # ^^^ still needs work for panel, code below generates a column indicating the change in PAYT from year to year. 0 is no change, 1 is a change from no to yes, -1 is a change from yes to no
 
-data_with_controls$PAYT = as.numeric(data_with_controls$PAYT)
-
-data_with_controls = data_with_controls %>%
-   group_by(municipality) %>%
-   mutate(PAYT.change = PAYT - lag(PAYT))
-
-data_with_controls$PAYT = as.factor(data_with_controls$PAYT)
+# data_with_controls$PAYT = as.integer(data_with_controls$PAYT)
+# 
+# data_with_controls = data_with_controls %>%
+#    group_by(municipality) %>%
+#    mutate(PAYT.change = PAYT - lag(PAYT))
+# 
+# data_with_controls$PAYT = as.factor(data_with_controls$PAYT)
 
 # as of now, 2011 is all NA and there are some with missing entries where changes can't be detected, a start
 
@@ -358,13 +358,31 @@ data_with_controls$service_type <- as.numeric(data_with_controls$service_type)
 
 freq(data_with_controls$service_type) #5 municipalities have "NA" for service type. Should I remove these? 
 
-#FE OLS Regression code
-reg1 <- feols(trash_tonnage~PAYT + PAYT*service_type + population + income_pc | factor(municipality) + factor(year), data=data_with_controls, se = "hetero") #last element provides heteroscedisity assesment
+#FE OLS Regression code without controls
+fe_reg1 <- feols(trash_tonnage~PAYT + PAYT*service_type | factor(municipality) + factor(year), data=data_with_controls, se = "hetero") #last element provides heteroscedisity assesment
 
-summary(reg1)
+summary(fe_reg1)
 
-# FE OLS w/ logs
+#FE OLS Regression code with controls
+fe_reg2 <- feols(trash_tonnage~PAYT + PAYT*service_type + population + income_pc | factor(municipality) + factor(year), data=data_with_controls, se = "hetero") #last element provides heteroscedisity assesment
 
-log_fereg1 <- feols(log(trash_tonnage)~PAYT + PAYT*service_type + log(population) + log(income_pc) | factor(municipality) + factor(year), data=data_with_controls, se = "hetero") #last element provides heteroscedisity assesment
+summary(fe_reg2)
 
-summary(log_fereg1)
+# FE OLS w/ logs without controls
+
+log_fe_reg1 <- feols(log(trash_tonnage)~PAYT + PAYT*service_type | factor(municipality) + factor(year), data=data_with_controls, se = "hetero") #last element provides heteroscedisity assesment
+
+summary(log_fe_reg1)
+
+# FE OLS w/ logs with controls
+
+log_fe_reg2 <- feols(log(trash_tonnage)~PAYT + PAYT*service_type + population + income_pc | factor(municipality) + factor(year), data=data_with_controls, se = "hetero") #last element provides heteroscedisity assesment
+
+summary(log_fe_reg2)
+
+# for final regression table
+
+etable(fe_reg1, fe_reg2, log_fe_reg1, log_fe_reg2, tex = T)
+
+
+

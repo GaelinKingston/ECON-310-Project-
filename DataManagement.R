@@ -223,6 +223,7 @@ complete_data_2011_2019 %>%
 complete_data_2011_2019$service_type = as.factor(complete_data_2011_2019$service_type)
 complete_data_2011_2019$PAYT = as.factor(complete_data_2011_2019$PAYT)
 
+
 # messy output
 
 summary(complete_data_2011_2019)  
@@ -297,18 +298,23 @@ rm(mass_msw_2009,
    simple_2016,
    simple_2017,
    simple_2018,
-   simple_2019)
+   simple_2019,
+   complete_data_2011_2019,
+   income)
 
+# making the data panel format: adding year columns indicating whether or not a municipality switched to PAYT in that year
 
-# BELOW NEEDS WORK
-# saving workspace to be loaded from github link for modeling script (hopeful)
+# ^^^ still needs work for panel, code below generates a column indicating the change in PAYT from year to year. 0 is no change, 1 is a change from no to yes, -1 is a change from yes to no
 
-# Feel free to save the below workspace in a directory of your own on your machine so that it's available
-# save.image(file = "C:/Users/patty/OneDrive/Documents/ECON-310-Project-/model_workspace.RData")
+data_with_controls$PAYT = as.numeric(data_with_controls$PAYT)
 
+data_with_controls = data_with_controls %>%
+   group_by(municipality) %>%
+   mutate(PAYT.change = PAYT - lag(PAYT))
 
-# load("C:/Users/patty/OneDrive/Documents/ECON-310-Project-/model_workspace.RData")
-# END WORK ZONE
+data_with_controls$PAYT = as.factor(data_with_controls$PAYT)
+
+# as of now, 2011 is all NA and there are some with missing entries where changes can't be detected, a start
 
 ### SLR ###
 

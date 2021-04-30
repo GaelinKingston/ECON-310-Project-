@@ -307,14 +307,27 @@ rm(mass_msw_2009,
 # ^^^ still needs work for panel, code below generates a column indicating the change in PAYT from year to year. 0 is no change, 1 is a change from no to yes, -1 is a change from yes to no
 
 # data_with_controls$PAYT = as.integer(data_with_controls$PAYT)
-# 
+#
 # data_with_controls = data_with_controls %>%
-#    group_by(municipality) %>%
-#    mutate(PAYT.change = PAYT - lag(PAYT))
+#     group_by(municipality) %>%
+#     mutate(PAYT.change = PAYT - lag(PAYT))
+# 
+# data_with_controls %>% 
+#    filter(PAYT.change == -1, year == 2019) %>% 
+#    select(municipality, year, PAYT.change)
 # 
 # data_with_controls$PAYT = as.factor(data_with_controls$PAYT)
 
 # as of now, 2011 is all NA and there are some with missing entries where changes can't be detected, a start
+
+# checking for balanced panel (municipalities that have observations for every year in the dataset)
+
+data_with_controls %>% 
+   group_by(municipality) %>% 
+   count() -> balanced_panel
+
+balanced_panel %>% 
+   filter(n >= 9)
 
 ### SLR ###
 

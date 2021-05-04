@@ -1,4 +1,4 @@
-### Patrick Wolff & Gaelin Kingston
+###Patrick Wolff & Gaelin Kingston
 ### ECON310: Environmental Resource Economics Final Paper
 ### Dataset Compilation
 
@@ -306,16 +306,12 @@ rm(mass_msw_2009,
 
 # ^^^ still needs work for panel, code below generates a column indicating the change in PAYT from year to year. 0 is no change, 1 is a change from no to yes, -1 is a change from yes to no
 
-# data_with_controls$PAYT = as.integer(data_with_controls$PAYT)
+data_with_controls$PAYT = as.numeric(as.character(data_with_controls$PAYT))
 #
-# data_with_controls = data_with_controls %>%
-#     group_by(municipality) %>%
-#     mutate(PAYT.change = PAYT - lag(PAYT))
-# 
-# data_with_controls %>% 
-#    filter(PAYT.change == -1, year == 2019) %>% 
-#    select(municipality, year, PAYT.change)
-# 
+data_with_controls = data_with_controls %>%
+    group_by(municipality) %>%
+    mutate(PAYT.change = PAYT - lag(PAYT))
+ 
 # data_with_controls$PAYT = as.factor(data_with_controls$PAYT)
 
 # as of now, 2011 is all NA and there are some with missing entries where changes can't be detected, a start
@@ -328,6 +324,18 @@ data_with_controls %>%
 
 balanced_panel %>% 
    filter(n >= 9)
+
+data_with_controls %>% 
+   filter(PAYT.change == 1) -> to_payt
+
+to_payt %>% 
+   count(municipality)
+
+data_with_controls %>% 
+   group_by(year) %>% 
+   dplyr::summarize(avg_trash = mean(trash_tonnage))
+
+
 
 ### SLR ###
 
@@ -343,7 +351,11 @@ mlr_2 = lm(trash_tonnage ~ PAYT + income_pc + population , data = data_with_cont
 
 summary(mlr_2)
 
-stargazer(slr_1, mlr_1, mlr_2, type = "latex", out = "regression_output_first")
+mlr_3 = lm(trash_tonnage ~ PAYT + PAYT*service_type + income_pc + population , data = data_with_controls)
+
+summary(mlr_3)
+
+stargazer(slr_1, mlr_1, mlr_2, mlr_3, type = "latex", out = "regression_output_first")
 
 # Diff in diff should have an xt and a Wi
 
@@ -351,9 +363,6 @@ stargazer(slr_1, mlr_1, mlr_2, type = "latex", out = "regression_output_first")
 ## Move from slr->diff in diff->fixed effects/event history, talk about the progression towards a more unbiased model
 
 
-
-data_with_controls %>% 
-   ggplot(aes(x = PAYT)) + geom_histogram(stat = "count") + facet_wrap(data_with_controls$year)
 
 
 ### Code for fixed effect OLS regression
@@ -366,10 +375,13 @@ data_with_controls$service_type <- as.character(data_with_controls$service_type)
 data_with_controls$service_type[data_with_controls$service_type == "Drop-off"] <- 0
 data_with_controls$service_type[data_with_controls$service_type == "Curbside" | data_with_controls$service_type == "Both"] <- 1
 
+# Dropping observations with "none" for service_type
+data_with_controls = data_with_controls[data_with_controls$service_type != "None", ]
+
 #Change service_type to numeric from character
 data_with_controls$service_type <- as.numeric(data_with_controls$service_type)
 
-freq(data_with_controls$service_type) #5 municipalities have "NA" for service type. Should I remove these? 
+freq(data_with_controls$service_type)
 
 #FE OLS Regression code without controls
 fe_reg1 <- feols(trash_tonnage~PAYT + PAYT*service_type | factor(municipality) + factor(year), data=data_with_controls, se = "hetero") #last element provides heteroscedisity assesment
@@ -389,13 +401,66 @@ summary(log_fe_reg1)
 
 # FE OLS w/ logs with controls
 
-log_fe_reg2 <- feols(log(trash_tonnage)~PAYT + PAYT*service_type + population + income_pc | factor(municipality) + factor(year), data=data_with_controls, se = "hetero") #last element provides heteroscedisity assesment
+log_fe_reg2 <- feols(log(trash_tonnage)~PAYT + PAYT*service_type + population + income_pc | factor(municipality) + factor(year), data=data_with_controls, se = "cluster") #last element provides heteroscedisity assesment
 
 summary(log_fe_reg2)
 
 # for final regression table
 
 etable(fe_reg1, fe_reg2, log_fe_reg1, log_fe_reg2, tex = T)
+
+
+### Code for Event History Model
+
+# create two figures: one is a line (just the data)
+#  the other is a regression
+#   year (current) - payt(first year)
+
+
+data_with_controls %>% 
+   ggplot(aes(x = PAYT)) + geom_histogram(stat = "count") + facet_wrap(data_with_controls$year)
+
+first_last_entry.df <- data_with_controls %>%
+   group_by(municipality) %>%
+   filter(PAYT.change == 1) %>%
+   mutate(payt_entry_first = min(year, na.rm = T)) %>%
+   select(municipality, payt_entry_first) %>%
+   distinct()
+
+event_hist_data = data_with_controls %>% 
+   left_join(first_last_entry.df, by = c("municipality" = "municipality"))
+
+event_hist_data$years_to_PAYT = event_hist_data$year - event_hist_data$payt_entry_first
+
+
+event_hist_agg = event_hist_data %>%
+   ungroup() %>% 
+   group_by(years_to_PAYT) %>% 
+   summarize(avg_trash = mean(trash_tonnage))
+
+#DISCUSSION SECTION
+
+event_hist_data %>%
+   ungroup() %>% 
+   group_by(years_to_PAYT) %>% 
+   dplyr::summarise(n = n_distinct(municipality))
+
+p5 <- ggplot(event_hist_agg, aes(x=years_to_PAYT, y=avg_trash)) +
+   geom_line(color = "#e34a33") +
+   geom_vline(xintercept = 0, linetype = "solid", color = "grey30")
+
+p5
+
+
+
+
+
+
+
+
+
+
+
 
 
 

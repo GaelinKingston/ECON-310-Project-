@@ -256,11 +256,7 @@ scatter_set %>%
 
 #  dropping boston
 
-yankee_set = scatter_set %>% 
-   filter(municipality != "boston")
-
-yankee_set %>% 
-   ggplot(aes(x = avg_pop, y = avg_tonnage)) + geom_point()
+data_with_controls = data_with_controls[data_with_controls$municipality != "boston",]
 
 #  feols without boston
 
@@ -337,7 +333,7 @@ data_with_controls %>%
 
 
 
-### SLR ###
+### SLR and MLR ###
 
 slr_1 = lm(trash_tonnage ~ PAYT, data = data_with_controls)
 
@@ -355,7 +351,28 @@ mlr_3 = lm(trash_tonnage ~ PAYT + PAYT*service_type + income_pc + population , d
 
 summary(mlr_3)
 
-stargazer(slr_1, mlr_1, mlr_2, mlr_3, type = "latex", out = "regression_output_first")
+ln_slr_1 = lm(log(trash_tonnage) ~ PAYT, data = data_with_controls)
+
+summary(ln_slr_1)
+
+ln_mlr_1 = lm(log(trash_tonnage) ~ PAYT + income_pc , data = data_with_controls)
+
+summary(ln_mlr_1)
+
+ln_mlr_2 = lm(log(trash_tonnage) ~ PAYT + income_pc + population , data = data_with_controls)
+
+summary(ln_mlr_2)
+
+ln_mlr_3 = lm(log(trash_tonnage) ~ PAYT + PAYT*service_type + income_pc + population , data = data_with_controls)
+
+summary(ln_mlr_3)
+
+
+stargazer(slr_1, ln_slr_1, type = "latex", out = "regression_output_first")
+
+stargazer(mlr_1, mlr_2, mlr_3, type = "latex")
+
+stargazer(ln_mlr_1, ln_mlr_2, ln_mlr_3, type = "latex")
 
 # Diff in diff should have an xt and a Wi
 
@@ -384,18 +401,18 @@ data_with_controls$service_type <- as.numeric(data_with_controls$service_type)
 freq(data_with_controls$service_type)
 
 #FE OLS Regression code without controls
-fe_reg1 <- feols(trash_tonnage~PAYT + PAYT*service_type | factor(municipality) + factor(year), data=data_with_controls, se = "hetero") #last element provides heteroscedisity assesment
+fe_reg1 <- feols(trash_tonnage~PAYT + PAYT*service_type | factor(municipality) + factor(year), data=data_with_controls, se = "cluster") #last element provides heteroscedisity assesment
 
 summary(fe_reg1)
 
 #FE OLS Regression code with controls
-fe_reg2 <- feols(trash_tonnage~PAYT + PAYT*service_type + population + income_pc | factor(municipality) + factor(year), data=data_with_controls, se = "hetero") #last element provides heteroscedisity assesment
+fe_reg2 <- feols(trash_tonnage~PAYT + PAYT*service_type + population + income_pc | factor(municipality) + factor(year), data=data_with_controls, se = "cluster") #last element provides heteroscedisity assesment
 
 summary(fe_reg2)
 
 # FE OLS w/ logs without controls
 
-log_fe_reg1 <- feols(log(trash_tonnage)~PAYT + PAYT*service_type | factor(municipality) + factor(year), data=data_with_controls, se = "hetero") #last element provides heteroscedisity assesment
+log_fe_reg1 <- feols(log(trash_tonnage)~PAYT + PAYT*service_type | factor(municipality) + factor(year), data=data_with_controls, se = "cluster") #last element provides heteroscedisity assesment
 
 summary(log_fe_reg1)
 
@@ -409,8 +426,13 @@ summary(log_fe_reg2)
 
 etable(fe_reg1, fe_reg2, log_fe_reg1, log_fe_reg2, tex = T)
 
+# Question for MA DEEP consultants: what other parallel trends could potentially be affecting this relationship? What could defeat this parallel assumption?
+
+
 
 ### Code for Event History Model
+
+#  discussion section: more data could provide grounds to revisit the investigation of the effectiveness of this policy through an event history analysis
 
 # create two figures: one is a line (just the data)
 #  the other is a regression
@@ -450,6 +472,8 @@ p5 <- ggplot(event_hist_agg, aes(x=years_to_PAYT, y=avg_trash)) +
    geom_vline(xintercept = 0, linetype = "solid", color = "grey30")
 
 p5
+
+
 
 
 

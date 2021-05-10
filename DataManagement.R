@@ -254,15 +254,21 @@ scatter_set = data_with_controls %>%
 scatter_set %>% 
    ggplot(aes(x = avg_pop, y = avg_tonnage)) + geom_point()
 
+data_with_controls %>% 
+   
+
 #  dropping boston
 
 data_with_controls = data_with_controls[data_with_controls$municipality != "boston",]
 
-#  feols without boston
+# Summary Statistics without Boston
 
-no_boston_fe = feols(trash_tonnage~PAYT + PAYT*service_type + population + income_pc | factor(municipality) + factor(year), data = yankee_set, se = "hetero")
+sum_stats = data.frame(data_with_controls$trash_tonnage, data_with_controls$population, data_with_controls$income_pc)
 
-summary(no_boston_fe)
+colnames(sum_stats) = c("trash_tonnage", "population", "income_pc")
+
+stargazer(as.data.frame(sum_stats), type = "latex", out = "tab_of_means.txt")
+
 
 #   Decluttering environment after combinations (add anything to this list that was temporary in the script)
 
@@ -298,9 +304,7 @@ rm(mass_msw_2009,
    complete_data_2011_2019,
    income)
 
-# making the data panel format: adding year columns indicating whether or not a municipality switched to PAYT in that year
-
-# ^^^ still needs work for panel, code below generates a column indicating the change in PAYT from year to year. 0 is no change, 1 is a change from no to yes, -1 is a change from yes to no
+# code below generates a column indicating the change in PAYT from year to year. 0 is no change, 1 is a change from no to yes, -1 is a change from yes to no
 
 data_with_controls$PAYT = as.numeric(as.character(data_with_controls$PAYT))
 #
@@ -314,12 +318,9 @@ data_with_controls = data_with_controls %>%
 
 # checking for balanced panel (municipalities that have observations for every year in the dataset)
 
-data_with_controls %>% 
-   group_by(municipality) %>% 
-   count() -> balanced_panel
 
-balanced_panel %>% 
-   filter(n >= 9)
+stargazer(as.data.frame(complete_data_2011_2019), type = "latex", out = "tab_of_means.txt")
+
 
 data_with_controls %>% 
    filter(PAYT.change == 1) -> to_payt
@@ -331,6 +332,21 @@ data_with_controls %>%
    group_by(year) %>% 
    dplyr::summarize(avg_trash = mean(trash_tonnage))
 
+
+#Change service_type from a factor to a character
+data_with_controls$service_type <- as.character(data_with_controls$service_type)
+
+#Changing "service_type"response values to 1 if "curbside" or "Both" and 0 if "dropoff"
+data_with_controls$service_type[data_with_controls$service_type == "Drop-off"] <- 0
+data_with_controls$service_type[data_with_controls$service_type == "Curbside" | data_with_controls$service_type == "Both"] <- 1
+
+# Dropping observations with "none" for service_type
+data_with_controls = data_with_controls[data_with_controls$service_type != "None", ]
+
+#Change service_type to numeric from character
+data_with_controls$service_type <- as.factor(data_with_controls$service_type)
+
+freq(data_with_controls$service_type)
 
 
 ### SLR and MLR ###
@@ -385,21 +401,6 @@ stargazer(ln_mlr_1, ln_mlr_2, ln_mlr_3, type = "latex")
 ### Code for fixed effect OLS regression
 
 
-#Change service_type from a factor to a character
-data_with_controls$service_type <- as.character(data_with_controls$service_type)
-
-#Changing "service_type"response values to 1 if "curbside" or "Both" and 0 if "dropoff"
-data_with_controls$service_type[data_with_controls$service_type == "Drop-off"] <- 0
-data_with_controls$service_type[data_with_controls$service_type == "Curbside" | data_with_controls$service_type == "Both"] <- 1
-
-# Dropping observations with "none" for service_type
-data_with_controls = data_with_controls[data_with_controls$service_type != "None", ]
-
-#Change service_type to numeric from character
-data_with_controls$service_type <- as.numeric(data_with_controls$service_type)
-
-freq(data_with_controls$service_type)
-
 #FE OLS Regression code without controls
 fe_reg1 <- feols(trash_tonnage~PAYT + PAYT*service_type | factor(municipality) + factor(year), data=data_with_controls, se = "cluster") #last element provides heteroscedisity assesment
 
@@ -422,9 +423,17 @@ log_fe_reg2 <- feols(log(trash_tonnage)~PAYT + PAYT*service_type + population + 
 
 summary(log_fe_reg2)
 
+# FE OLS w/ logs with logged controls
+
+log_fe_reg3 <- feols(log(trash_tonnage)~PAYT + PAYT*service_type + log(population) + log(income_pc) | factor(municipality) + factor(year), data=data_with_controls, se = "cluster") #last element provides heteroscedisity assesment
+
+summary(log_fe_reg3)
+
 # for final regression table
 
-etable(fe_reg1, fe_reg2, log_fe_reg1, log_fe_reg2, tex = T)
+# for final regression table
+
+etable(fe_reg1, fe_reg2, log_fe_reg1, log_fe_reg3, tex = T)
 
 # Question for MA DEEP consultants: what other parallel trends could potentially be affecting this relationship? What could defeat this parallel assumption?
 
@@ -473,18 +482,95 @@ p5 <- ggplot(event_hist_agg, aes(x=years_to_PAYT, y=avg_trash)) +
 
 p5
 
+### BALANCED PANEL AND REGRESSIONS
+
+data_with_controls %>% 
+   group_by(municipality) %>% 
+   count() -> balanced_panel
+
+balanced_panel %>% 
+   filter(n >= 9) -> bp_full
 
 
+bp_full %>% 
+   left_join(data_with_controls, by = c("municipality" = "municipality")) ->bp_full_joined
 
+bp_full_joined = bp_full_joined[, c(1, 3:10)] #removes count column for observations per municipality and EQV assessments (superfluous)
 
+bp_sum_stats = bp_full_joined %>% 
+   select(trash_tonnage, population, income_pc)
 
+stargazer(as.data.frame(bp_sum_stats), type = "latex")
 
+bp_full_joined %>% 
+   ggplot(aes(x = PAYT)) + geom_histogram(stat = "count") + facet_wrap(bp_full_joined$year)
 
+summary(bp_full_joined)
 
+### SLR and MLR ###
 
+bp_slr_1 = lm(trash_tonnage ~ PAYT, data = bp_full_joined)
 
+summary(bp_slr_1)
 
+bp_mlr_1 = lm(trash_tonnage ~ PAYT + income_pc , data = bp_full_joined)
 
+summary(bp_mlr_1)
 
+bp_mlr_2 = lm(trash_tonnage ~ PAYT + income_pc + population , data = bp_full_joined)
 
+summary(bp_mlr_2)
 
+bp_mlr_3 = lm(trash_tonnage ~ PAYT + PAYT*service_type + income_pc + population , data = bp_full_joined)
+
+summary(bp_mlr_3)
+
+bp_ln_slr_1 = lm(log(trash_tonnage) ~ PAYT, data = bp_full_joined)
+
+summary(bp_ln_slr_1)
+
+bp_ln_mlr_1 = lm(log(trash_tonnage) ~ PAYT + log(income_pc) , data = bp_full_joined)
+
+summary(bp_ln_mlr_1)
+
+bp_ln_mlr_2 = lm(log(trash_tonnage) ~ PAYT + log(income_pc) + log(population) , data = bp_full_joined)
+
+summary(bp_ln_mlr_2)
+
+bp_ln_mlr_3 = lm(log(trash_tonnage) ~ PAYT + PAYT*service_type + log(income_pc) + log(population) , data = bp_full_joined)
+
+summary(bp_ln_mlr_3)
+
+stargazer(bp_slr_1, bp_ln_slr_1, type = "latex")
+
+stargazer(bp_mlr_1, bp_mlr_2, bp_mlr_3, type = "latex")
+
+stargazer(bp_ln_mlr_1, bp_ln_mlr_2, bp_ln_mlr_3, type = "latex")
+
+### Code for fixed effect OLS regression
+
+#FE OLS Regression code without controls
+bp_fe_reg1 <- feols(trash_tonnage~PAYT + PAYT*service_type | factor(municipality) + factor(year), data=bp_full_joined, se = "cluster") #last element provides heteroscedisity assesment
+
+summary(bp_fe_reg1)
+
+#FE OLS Regression code with controls
+bp_fe_reg2 <- feols(trash_tonnage~PAYT + PAYT*service_type + population + income_pc | factor(municipality) + factor(year), data=bp_full_joined, se = "cluster") #last element provides heteroscedisity assesment
+
+summary(bp_fe_reg2)
+
+# FE OLS w/ logs without controls
+
+bp_log_fe_reg1 <- feols(log(trash_tonnage)~PAYT + PAYT*service_type | factor(municipality) + factor(year), data=bp_full_joined, se = "cluster") 
+
+summary(bp_log_fe_reg1)
+
+# FE OLS w/ logs with logged controls
+
+bp_log_fe_reg2 <- feols(log(trash_tonnage)~PAYT + PAYT*service_type + log(population) + log(income_pc) | factor(municipality) + factor(year), data=bp_full_joined, se = "cluster") 
+
+summary(bp_log_fe_reg2)
+
+# for final regression table
+
+etable(bp_fe_reg1, bp_fe_reg2, bp_log_fe_reg1, bp_log_fe_reg2, tex = T)

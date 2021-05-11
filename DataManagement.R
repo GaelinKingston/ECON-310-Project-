@@ -502,8 +502,21 @@ bp_sum_stats = bp_full_joined %>%
 
 stargazer(as.data.frame(bp_sum_stats), type = "latex")
 
+#bp_full_joined$PAYT = as.numeric(as.character(bp_full_joined$PAYT))
+
+bp_full_joined$service_type = ifelse(bp_full_joined$service_type == 1, "Pick-Up", "Drop-Off")
+
 bp_full_joined %>% 
-   ggplot(aes(x = PAYT)) + geom_histogram(stat = "count") + facet_wrap(bp_full_joined$year)
+   ggplot(aes(x = PAYT, y = mean(trash_tonnage))) + geom_col()
+
+plot = bp_full_joined %>% 
+   ggplot(aes(fill = service_type, x = PAYT)) + geom_bar() + facet_wrap(bp_full_joined$year)
+
+plot # scale_x_discrete(limit = c(0, 1))
+
+bp_full_joined$service_type = ifelse(bp_full_joined$service_type == "Pick-Up", 1, 0)
+
+bp_full_joined$PAYT = as.factor(as.character(bp_full_joined$PAYT))
 
 summary(bp_full_joined)
 
